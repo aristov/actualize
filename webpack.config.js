@@ -3,7 +3,7 @@ const JS_EXT = NODE_ENV === 'production' ? '.min.js' : '.js'
 
 module.exports = {
   mode : NODE_ENV || 'none',
-  entry : './lib/index.js',
+  entry : './index.js',
   output : {
     filename : 'actualize' + JS_EXT,
     library : {
