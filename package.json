@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack && NODE_ENV=production webpack",
+    "coverage": "nyc --reporter=lcov npm test",
     "test": "ava",
     "watch": "ava --watch"
   },
@@ -26,6 +27,7 @@
   "devDependencies": {
     "ava": "^4.2.0",
     "domb": "^0.1.1",
+    "nyc": "^15.1.0",
     "webpack": "^5.72.1",
     "webpack-cli": "^4.9.2"
   }
