@@ -1,8 +1,10 @@
 {
   "name": "actualize",
   "version": "0.0.1",
-  "description": "DOM patching library",
-  "main": "index.js",
+  "description": "DOM patching algorithm",
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "build": "webpack && NODE_ENV=production webpack",
     "coverage": "nyc --reporter=lcov npm test",
@@ -15,8 +17,11 @@
   },
   "keywords": [
     "dom",
-    "patch",
-    "library"
+    "virtual dom",
+    "dom diffing",
+    "dom patching",
+    "morphdom",
+    "nanomorph"
   ],
   "author": "Vyacheslav Aristov",
   "license": "MIT",
@@ -31,5 +36,8 @@
     "sinon": "^14.0.0",
     "webpack": "^5.72.1",
     "webpack-cli": "^4.9.2"
+  },
+  "engines": {
+    "node": ">=14.19"
   }
 }
