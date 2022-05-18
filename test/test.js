@@ -35,7 +35,7 @@ test('update attribute', t => {
   t.is(result.outerHTML, '<div class="bar"></div>')
 })
 
-test('different tagName', t => {
+test('other tagName', t => {
   const nodeA = a({ href : 'https://example.com', children : 'Test' })
   const nodeB = b('Example')
   const container = div(nodeA)
@@ -44,7 +44,7 @@ test('different tagName', t => {
   t.is(container.outerHTML, '<div><b>Example</b></div>')
 })
 
-test('different nodeType', t => {
+test('other nodeType', t => {
   const nodeA = a({ href : 'https://example.com', children : 'Test' })
   const nodeB = text('Example')
   const container = div(nodeA)
@@ -248,4 +248,41 @@ test('hooks #3', t => {
   t.true(nodeWillUnmount.calledWith(bar))
   t.true(nodeDidUnmount.calledOnce)
   t.true(nodeDidUnmount.calledWith(bar))
+})
+
+test('childrenOnly', t => {
+  const childA = a()
+  const childB = b()
+  const nodeA = div({ className : 'foo', children : [childA] })
+  const nodeB = div({ className : 'bar', children : [childB] })
+  const result = actualize(nodeA, nodeB, { childrenOnly : true })
+  t.is(result, nodeA)
+  t.is(nodeA.className, 'foo')
+  t.is(nodeA.childElementCount, 1)
+  t.is(nodeA.children[0], childB)
+  t.is(nodeA.outerHTML, '<div class="foo"><b></b></div>')
+})
+
+test('getKey', t => {
+  let li0, li1, li2, li3, li4
+  const nodeA = ul([
+    li1 = li({ 'data-key' : 'li1', children : 'one' }),
+    li2 = li({ 'data-key' : 'li2', children : 'two' }),
+    li3 = li({ 'data-key' : 'li3', children : 'three' }),
+  ])
+  const nodeB = ul([
+    li0 = li({ 'data-key' : 'li0', children : 'zero' }),
+    li({ 'data-key' : 'li2', children : 'two' }),
+    li4 = li({ 'data-key' : 'li4', children : 'four' }),
+  ])
+  const getKey = node => node.dataset.key
+  const result = actualize(nodeA, nodeB, { getKey })
+  t.is(result, nodeA)
+  t.is(nodeA.childElementCount, 3)
+  t.is(nodeA.children[0], li0)
+  t.is(nodeA.children[1], li2)
+  t.is(nodeA.children[2], li4)
+  t.is(li1.parentNode, null)
+  t.is(li3.parentNode, null)
+  t.is(nodeA.outerHTML, '<ul><li data-key="li0">zero</li><li data-key="li2">two</li><li data-key="li4">four</li></ul>')
 })
