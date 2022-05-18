@@ -30,14 +30,28 @@ const updateNode = __webpack_require__(6)
 
 const getNodeId = node => node.id
 
+/**
+ * @param {*|Element} nodeA
+ * @param {*|Element} nodeB
+ * @param {{}} [options]
+ * @param {boolean} [options.childrenOnly]
+ * @param {function} [options.nodeWillUpdate]
+ * @param {function} [options.nodeDidUpdate]
+ * @param {function} [options.childrenWillUpdate]
+ * @param {function} [options.childrenDidUpdate]
+ * @param {function} [options.nodeWillMount]
+ * @param {function} [options.nodeDidMount]
+ * @param {function} [options.nodeWillUnmount]
+ * @param {function} [options.nodeDidUnmount]
+ * @return {Element}
+ */
 function actualize(nodeA, nodeB, options = {}) {
   options.getKey ??= getNodeId
   if(options.childrenOnly) {
     setChildren(nodeA, nodeB, options)
     return nodeA
   }
-  updateNode(nodeA, nodeB, options)
-  return nodeA
+  return updateNode(nodeA, nodeB, options)
 }
 
 module.exports = actualize
@@ -47,6 +61,8 @@ module.exports = actualize
 /* 2 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
+module.exports = setChildren // avoiding empty exports for circular dependency
+
 const deep = __webpack_require__(3)
 const getKeyIndex = __webpack_require__(4)
 const setChildNodes = __webpack_require__(5)
@@ -54,6 +70,11 @@ const updateNode = __webpack_require__(6)
 
 const { indexOf } = Array.prototype
 
+/**
+ * @param {*|Element} nodeA
+ * @param {*|Element} nodeB
+ * @param {{}} [options]
+ */
 function setChildren(nodeA, nodeB, options) {
   const indexA = getKeyIndex(nodeA, options.getKey)
   const indexB = getKeyIndex(nodeB, options.getKey)
@@ -63,10 +84,10 @@ function setChildren(nodeA, nodeB, options) {
   }
   const {
     getKey,
-    nodeWillAppend,
-    nodeDidAppend,
-    nodeWillRemove,
-    nodeDidRemove,
+    nodeWillMount,
+    nodeDidMount,
+    nodeWillUnmount,
+    nodeDidUnmount,
   } = options
   const childrenB = Array.from(nodeB.children)
   let childA = nodeA.firstElementChild
@@ -74,9 +95,9 @@ function setChildren(nodeA, nodeB, options) {
   while(childA) {
     nextA = childA.nextElementSibling
     if(!indexB[getKey(childA)]) {
-      nodeWillRemove?.(childA)
+      nodeWillUnmount?.(childA)
       childA.remove()
-      deep(childA, nodeDidRemove)
+      deep(childA, nodeDidUnmount)
     }
     childA = nextA
   }
@@ -88,12 +109,12 @@ function setChildren(nodeA, nodeB, options) {
       continue
     }
     nextA = nodeA.children[i]
-    nodeWillAppend?.(childB)
+    nodeWillMount?.(childB)
     if(nextA) {
       nextA.before(childB)
     }
     else nodeA.append(childB)
-    deep(childB, nodeDidAppend)
+    deep(childB, nodeDidMount)
   }
   for(i = 0; i < childrenB.length; i++) {
     childB = childrenB[i]
@@ -116,13 +137,15 @@ function setChildren(nodeA, nodeB, options) {
   }
 }
 
-module.exports = setChildren
-
 
 /***/ }),
 /* 3 */
 /***/ ((module) => {
 
+/**
+ * @param {*|Node} node
+ * @param {function} [handler]
+ */
 function deep(node, handler) {
   if(!handler) {
     return
@@ -143,10 +166,20 @@ module.exports = deep
 /* 4 */
 /***/ ((module) => {
 
+const ELEMENT_NODE = 1
+
+/**
+ * @param {Node} node
+ * @param {function} getKey
+ * @return {{}|null}
+ */
 function getKeyIndex(node, getKey) {
   const index = {}
   let child, key
   for(child of node.childNodes) {
+    if(child.nodeType !== ELEMENT_NODE) {
+      return null
+    }
     key = getKey(child)
     if(!key) {
       return null
@@ -166,17 +199,17 @@ module.exports = getKeyIndex
 const deep = __webpack_require__(3)
 const updateNode = __webpack_require__(6)
 
-const TEXT_NODE = 3
-
+/**
+ * @param {*|Element} nodeA
+ * @param {*|Element} nodeB
+ * @param {{}} [options]
+ */
 function setChildNodes(nodeA, nodeB, options) {
   const {
-    getKey,
-    nodeWillAppend,
-    nodeDidAppend,
-    nodeWillUpdate,
-    nodeDidUpdate,
-    nodeWillRemove,
-    nodeDidRemove,
+    nodeWillMount,
+    nodeDidMount,
+    nodeWillUnmount,
+    nodeDidUnmount,
   } = options
   const childNodesA = Array.from(nodeA.childNodes)
   const childNodesB = Array.from(nodeB.childNodes)
@@ -186,36 +219,18 @@ function setChildNodes(nodeA, nodeB, options) {
     childA = childNodesA[i]
     childB = childNodesB[i]
     if(!childA) {
-      nodeWillAppend?.(childB)
+      nodeWillMount?.(childB)
       nodeA.append(childB)
-      deep(childB, nodeDidAppend)
+      deep(childB, nodeDidMount)
       continue
     }
     if(!childB) {
-      nodeWillRemove?.(childA)
+      nodeWillUnmount?.(childA)
       childA.remove()
-      deep(childA, nodeDidRemove)
+      deep(childA, nodeDidUnmount)
       continue
     }
-    if(childA.nodeType === TEXT_NODE && childB.nodeType === TEXT_NODE) {
-      if(childA.data !== childB.data) {
-        nodeWillUpdate?.(childA, childB)
-        childA.data = childB.data
-        nodeDidUpdate?.(childA)
-      }
-      continue
-    }
-    if(childA.nodeType === childB.nodeType && childA.tagName === childB.tagName) {
-      if(getKey(childA) === getKey(childB)) {
-        updateNode(childA, childB, options)
-        continue
-      }
-    }
-    nodeWillRemove?.(childA)
-    nodeWillAppend?.(childB)
-    childA.replaceWith(childB)
-    deep(childA, nodeDidRemove)
-    deep(childB, nodeDidAppend)
+    updateNode(childA, childB, options)
   }
 }
 
@@ -228,20 +243,54 @@ module.exports = setChildNodes
 
 const setAttrs = __webpack_require__(7)
 const setChildren = __webpack_require__(2)
+const deep = __webpack_require__(3)
 
+const ELEMENT_NODE = 1
+const TEXT_NODE = 3
+
+/**
+ * @param {*|Node} nodeA
+ * @param {*|Node} nodeB
+ * @param {{}} [options]
+ * @retuns {Node}
+ */
 function updateNode(nodeA, nodeB, options) {
   const {
+    getKey,
+    nodeWillMount,
+    nodeDidMount,
+    nodeWillUnmount,
+    nodeDidUnmount,
     nodeWillUpdate,
     nodeDidUpdate,
     childrenWillUpdate,
     childrenDidUpdate,
   } = options
-  nodeWillUpdate?.(nodeA, nodeB)
-  setAttrs(nodeA, nodeB, options)
-  nodeDidUpdate?.(nodeA)
-  childrenWillUpdate?.(nodeA, nodeB)
-  setChildren(nodeA, nodeB, options)
-  childrenDidUpdate?.(nodeA)
+  if(nodeA.nodeType === TEXT_NODE && nodeB.nodeType === TEXT_NODE) {
+    if(nodeA.data !== nodeB.data) {
+      nodeWillUpdate?.(nodeA, nodeB)
+      nodeA.data = nodeB.data
+      nodeDidUpdate?.(nodeA)
+    }
+    return nodeA
+  }
+  if(nodeA.nodeType === ELEMENT_NODE && nodeB.nodeType === ELEMENT_NODE) {
+    if(nodeA.tagName === nodeB.tagName && getKey(nodeA) === getKey(nodeB)) {
+      nodeWillUpdate?.(nodeA, nodeB)
+      setAttrs(nodeA, nodeB)
+      nodeDidUpdate?.(nodeA)
+      childrenWillUpdate?.(nodeA, nodeB)
+      setChildren(nodeA, nodeB, options)
+      childrenDidUpdate?.(nodeA)
+      return nodeA
+    }
+  }
+  nodeWillUnmount?.(nodeA)
+  nodeWillMount?.(nodeB)
+  nodeA.replaceWith(nodeB)
+  deep(nodeA, nodeDidUnmount)
+  deep(nodeB, nodeDidMount)
+  return nodeB
 }
 
 module.exports = updateNode
@@ -251,6 +300,10 @@ module.exports = updateNode
 /* 7 */
 /***/ ((module) => {
 
+/**
+ * @param {*|Element} nodeA
+ * @param {*|Element} nodeB
+ */
 function setAttrs(nodeA, nodeB) {
   const names = new Set
   let attr, value
