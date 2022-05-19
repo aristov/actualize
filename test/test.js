@@ -226,10 +226,9 @@ test('hooks #2', t => {
 })
 
 test('hooks #3', t => {
-  const childA = a('foo')
-  const childB = b(childA)
-  const bar = text('bar')
-  const nodeA = div(bar)
+  const childA = text('foo')
+  const childB = b(a('bar'))
+  const nodeA = div(childA)
   const nodeB = div(childB)
   const nodeWillMount = sinon.spy()
   const nodeDidMount = sinon.spy()
@@ -241,13 +240,12 @@ test('hooks #3', t => {
   t.is(result, nodeA)
   t.true(nodeWillMount.calledOnce)
   t.true(nodeWillMount.calledWith(childB))
-  t.true(nodeDidMount.calledTwice)
-  t.is(nodeDidMount.args[0][0], childB)
-  t.is(nodeDidMount.args[1][0], childA)
+  t.true(nodeDidMount.calledOnce)
+  t.true(nodeDidMount.calledWith(childB))
   t.true(nodeWillUnmount.calledOnce)
-  t.true(nodeWillUnmount.calledWith(bar))
+  t.true(nodeWillUnmount.calledWith(childA))
   t.true(nodeDidUnmount.calledOnce)
-  t.true(nodeDidUnmount.calledWith(bar))
+  t.true(nodeDidUnmount.calledWith(childA))
 })
 
 test('childrenOnly', t => {
