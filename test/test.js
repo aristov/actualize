@@ -11,6 +11,24 @@ test('equal node', t => {
   t.is(result.outerHTML, '<div></div>')
 })
 
+test('other tagName', t => {
+  const nodeA = a({ href : 'https://example.com', children : 'Test' })
+  const nodeB = b('Example')
+  const container = div(nodeA)
+  const result = actualize(nodeA, nodeB)
+  t.is(result, nodeB)
+  t.is(container.outerHTML, '<div><b>Example</b></div>')
+})
+
+test('other nodeType', t => {
+  const nodeA = a({ href : 'https://example.com', children : 'Test' })
+  const nodeB = text('Example')
+  const container = div(nodeA)
+  const result = actualize(nodeA, nodeB)
+  t.is(result, nodeB)
+  t.is(container.outerHTML, '<div>Example</div>')
+})
+
 test('add attribute', t => {
   const nodeA = div()
   const nodeB = div({ className : 'foo' })
@@ -35,118 +53,6 @@ test('update attribute', t => {
   t.is(result.outerHTML, '<div class="bar"></div>')
 })
 
-test('other tagName', t => {
-  const nodeA = a({ href : 'https://example.com', children : 'Test' })
-  const nodeB = b('Example')
-  const container = div(nodeA)
-  const result = actualize(nodeA, nodeB)
-  t.is(result, nodeB)
-  t.is(container.outerHTML, '<div><b>Example</b></div>')
-})
-
-test('other nodeType', t => {
-  const nodeA = a({ href : 'https://example.com', children : 'Test' })
-  const nodeB = text('Example')
-  const container = div(nodeA)
-  const result = actualize(nodeA, nodeB)
-  t.is(result, nodeB)
-  t.is(container.outerHTML, '<div>Example</div>')
-})
-
-test('key list #1', t => {
-  let li1, li2, li3
-  const nodeA = ul([
-    li1 = li({ id : 'li1', children : 'one' }),
-    li2 = li({ id : 'li2', children : 'two' }),
-    li3 = li({ id : 'li3', children : 'three' }),
-  ])
-  const nodeB = ul([
-    li({ id : 'li1', className : 'foo', children : 'first' }),
-    li({ id : 'li2', className : 'bar', children : 'second' }),
-    li({ id : 'li3', className : 'wiz', children : 'third' }),
-  ])
-  const result = actualize(nodeA, nodeB)
-  t.is(result, nodeA)
-  t.is(nodeA.children[0], li1)
-  t.is(nodeA.children[1], li2)
-  t.is(nodeA.children[2], li3)
-  t.is(nodeA.childElementCount, 3)
-  t.is(nodeA.outerHTML, '<ul><li id="li1" class="foo">first</li><li id="li2" class="bar">second</li><li id="li3" class="wiz">third</li></ul>')
-})
-
-test('key list #2', t => {
-  let li1, li2, li3, li4
-  const nodeA = ul([
-    li1 = li({ id : 'li1', children : 'one' }),
-    li2 = li({ id : 'li2', children : 'two' }),
-    li3 = li({ id : 'li3', children : 'three' }),
-  ])
-  const nodeB = ul([
-    li({ id : 'li2', children : 'second' }),
-    li({ id : 'li3', children : 'third' }),
-    li4 = li({ id : 'li4', children : 'fourth' }),
-  ])
-  const result = actualize(nodeA, nodeB)
-  t.is(result, nodeA)
-  t.is(nodeA.children[0], li2)
-  t.is(nodeA.children[1], li3)
-  t.is(nodeA.children[2], li4)
-  t.is(nodeA.childElementCount, 3)
-  t.is(li1.parentNode, null)
-  t.is(nodeA.outerHTML, '<ul><li id="li2">second</li><li id="li3">third</li><li id="li4">fourth</li></ul>')
-})
-
-test('key list #3', t => {
-  let li0, li1, li2, li3
-  const nodeA = ul([
-    li1 = li({ id : 'li1', children : 'one' }),
-    li2 = li({ id : 'li2', children : 'two' }),
-    li3 = li({ id : 'li3', children : 'three' }),
-  ])
-  const nodeB = ul([
-    li0 = li({ id : 'li0', children : 'zeroth' }),
-    li({ id : 'li1', children : 'first' }),
-    li({ id : 'li2', children : 'second' }),
-  ])
-  const result = actualize(nodeA, nodeB)
-  t.is(result, nodeA)
-  t.is(nodeA.children[0], li0)
-  t.is(nodeA.children[1], li1)
-  t.is(nodeA.children[2], li2)
-  t.is(nodeA.childElementCount, 3)
-  t.is(li3.parentNode, null)
-  t.is(nodeA.outerHTML, '<ul><li id="li0">zeroth</li><li id="li1">first</li><li id="li2">second</li></ul>')
-})
-
-test('key list #4', t => {
-  let li1, li2, li3
-  const nodeA = ul([
-    li1 = li({ id : 'li1', children : 'one' }),
-    li2 = li({ id : 'li2', children : 'two' }),
-    li3 = li({ id : 'li3', children : 'three' }),
-  ])
-  const nodeB = ul([
-    li({ id : 'li3', children : 'third' }),
-    li({ id : 'li2', children : 'second' }),
-    li({ id : 'li1', children : 'first' }),
-  ])
-  const result = actualize(nodeA, nodeB)
-  t.is(result, nodeA)
-  t.is(nodeA.children[0], li3)
-  t.is(nodeA.children[1], li2)
-  t.is(nodeA.children[2], li1)
-  t.is(nodeA.childElementCount, 3)
-  t.is(nodeA.outerHTML, '<ul><li id="li3">third</li><li id="li2">second</li><li id="li1">first</li></ul>')
-})
-
-test('text node', t => {
-  const nodeA = text('foo')
-  const nodeB = text('bar')
-  const result = actualize(nodeA, nodeB)
-  t.is(result, nodeA)
-  t.is(nodeA.data, 'bar')
-})
-
 test('append child', t => {
   const nodeA = div()
   const nodeB = div('Hello world!')
@@ -163,6 +69,14 @@ test('remove child', t => {
   t.is(result, nodeA)
   t.false(nodeA.hasChildNodes())
   t.is(nodeA.outerHTML, '<div></div>')
+})
+
+test('text node', t => {
+  const nodeA = text('foo')
+  const nodeB = text('bar')
+  const result = actualize(nodeA, nodeB)
+  t.is(result, nodeA)
+  t.is(nodeA.data, 'bar')
 })
 
 test('option', t => {
@@ -193,6 +107,71 @@ test('textarea', t => {
   t.is(nodeA.outerHTML, '<textarea></textarea>')
 })
 
+test('keys #1', t => {
+  let li1, li2, li3
+  const nodeA = ul([
+    li1 = li({ id : 'li1', children : 'one' }),
+    li2 = li({ id : 'li2', children : 'two' }),
+    li3 = li({ id : 'li3', children : 'three' }),
+  ])
+  const nodeB = ul([
+    li({ id : 'li1', className : 'foo', children : 'first' }),
+    li({ id : 'li2', className : 'bar', children : 'second' }),
+    li({ id : 'li3', className : 'wiz', children : 'third' }),
+  ])
+  const result = actualize(nodeA, nodeB)
+  t.is(result, nodeA)
+  t.is(nodeA.children[0], li1)
+  t.is(nodeA.children[1], li2)
+  t.is(nodeA.children[2], li3)
+  t.is(nodeA.childElementCount, 3)
+  t.is(nodeA.outerHTML, '<ul><li id="li1" class="foo">first</li><li id="li2" class="bar">second</li><li id="li3" class="wiz">third</li></ul>')
+})
+
+test('keys #2', t => {
+  let li1, li2, li3, li4
+  const nodeA = ul([
+    li1 = li({ id : 'li1', children : 'one' }),
+    li2 = li({ id : 'li2', children : 'two' }),
+    li3 = li({ id : 'li3', children : 'three' }),
+  ])
+  const nodeB = ul([
+    li({ id : 'li2', children : 'second' }),
+    li({ id : 'li3', children : 'third' }),
+    li4 = li({ id : 'li4', children : 'fourth' }),
+  ])
+  const result = actualize(nodeA, nodeB)
+  t.is(result, nodeA)
+  t.is(nodeA.children[0], li2)
+  t.is(nodeA.children[1], li3)
+  t.is(nodeA.children[2], li4)
+  t.is(nodeA.childElementCount, 3)
+  t.is(li1.parentNode, null)
+  t.is(nodeA.outerHTML, '<ul><li id="li2">second</li><li id="li3">third</li><li id="li4">fourth</li></ul>')
+})
+
+test('keys #3', t => {
+  let li0, li1, li2, li3
+  const nodeA = ul([
+    li1 = li({ id : 'li1', children : 'one' }),
+    li2 = li({ id : 'li2', children : 'two' }),
+    li3 = li({ id : 'li3', children : 'three' }),
+  ])
+  const nodeB = ul([
+    li0 = li({ id : 'li0', children : 'zeroth' }),
+    li({ id : 'li1', children : 'first' }),
+    li({ id : 'li2', children : 'second' }),
+  ])
+  const result = actualize(nodeA, nodeB)
+  t.is(result, nodeA)
+  t.is(nodeA.children[0], li0)
+  t.is(nodeA.children[1], li1)
+  t.is(nodeA.children[2], li2)
+  t.is(nodeA.childElementCount, 3)
+  t.is(li3.parentNode, null)
+  t.is(nodeA.outerHTML, '<ul><li id="li0">zeroth</li><li id="li1">first</li><li id="li2">second</li></ul>')
+})
+
 test('hooks #1', t => {
   const nodeA = div()
   const nodeB = div()
@@ -214,13 +193,13 @@ test('hooks #1', t => {
   t.true(nodeWillUnmount.notCalled)
   t.true(nodeDidUnmount.notCalled)
   t.true(nodeWillUpdate.calledOnce)
-  t.true(nodeWillUpdate.calledWith(nodeA, nodeB))
+  t.true(nodeWillUpdate.calledWithExactly(nodeA, nodeB))
   t.true(nodeDidUpdate.calledOnce)
-  t.true(nodeDidUpdate.calledWith(nodeA))
+  t.true(nodeDidUpdate.calledWithExactly(nodeA, nodeB))
   t.true(childrenWillUpdate.calledOnce)
-  t.true(childrenWillUpdate.calledWith(nodeA, nodeB))
+  t.true(childrenWillUpdate.calledWithExactly(nodeA, nodeB))
   t.true(childrenDidUpdate.calledOnce)
-  t.true(childrenDidUpdate.calledWith(nodeA))
+  t.true(childrenDidUpdate.calledWithExactly(nodeA, nodeB))
 })
 
 test('hooks #2', t => {
@@ -237,13 +216,13 @@ test('hooks #2', t => {
   })
   t.is(result, nodeA)
   t.true(nodeWillMount.calledOnce)
-  t.true(nodeWillMount.calledWith(childB))
+  t.true(nodeWillMount.calledWithExactly(childB))
   t.true(nodeDidMount.calledOnce)
-  t.true(nodeDidMount.calledWith(childB))
+  t.true(nodeDidMount.calledWithExactly(childB))
   t.true(nodeWillUnmount.calledOnce)
-  t.true(nodeWillUnmount.calledWith(childA))
+  t.true(nodeWillUnmount.calledWithExactly(childA))
   t.true(nodeDidUnmount.calledOnce)
-  t.true(nodeDidUnmount.calledWith(childA))
+  t.true(nodeDidUnmount.calledWithExactly(childA))
 })
 
 test('hooks #3', t => {
@@ -259,7 +238,7 @@ test('hooks #3', t => {
     li0A = li({ id : 'li0', children : 'zeroth' }),
     li3B = li({ id : 'li3', children : threeB = text('third') }),
     li1B = li({ id : 'li1', children : oneB = text('first') }),
-    li4A =li({ id : 'li4', children : 'fourth' }),
+    li4A = li({ id : 'li4', children : 'fourth' }),
   ])
   const nodeWillMount = sinon.spy()
   const nodeDidMount = sinon.spy()
@@ -279,25 +258,25 @@ test('hooks #3', t => {
   t.true(nodeWillUnmount.calledOnce)
   t.true(nodeDidUnmount.calledOnce)
   t.is(nodeWillUpdate.callCount, 5)
-  t.true(nodeWillUpdate.getCall(0).calledWith(nodeA, nodeB))
-  t.true(nodeWillUpdate.getCall(1).calledWith(li3A, li3B))
-  t.true(nodeWillUpdate.getCall(2).calledWith(threeA, threeB))
-  t.true(nodeWillUpdate.getCall(3).calledWith(li1A, li1B))
-  t.true(nodeWillUpdate.getCall(4).calledWith(oneA, oneB))
+  t.true(nodeWillUpdate.getCall(0).calledWithExactly(nodeA, nodeB))
+  t.true(nodeWillUpdate.getCall(1).calledWithExactly(li3A, li3B))
+  t.true(nodeWillUpdate.getCall(2).calledWithExactly(threeA, threeB))
+  t.true(nodeWillUpdate.getCall(3).calledWithExactly(li1A, li1B))
+  t.true(nodeWillUpdate.getCall(4).calledWithExactly(oneA, oneB))
   t.is(nodeDidUpdate.callCount, 5)
-  t.true(nodeDidUpdate.getCall(0).calledWith(nodeA))
-  t.true(nodeDidUpdate.getCall(1).calledWith(li3A))
-  t.true(nodeDidUpdate.getCall(2).calledWith(threeA))
-  t.true(nodeDidUpdate.getCall(3).calledWith(li1A))
-  t.true(nodeDidUpdate.getCall(4).calledWith(oneA))
+  t.true(nodeDidUpdate.getCall(0).calledWithExactly(nodeA, nodeB))
+  t.true(nodeDidUpdate.getCall(1).calledWithExactly(li3A, li3B))
+  t.true(nodeDidUpdate.getCall(2).calledWithExactly(threeA, threeB))
+  t.true(nodeDidUpdate.getCall(3).calledWithExactly(li1A, li1B))
+  t.true(nodeDidUpdate.getCall(4).calledWithExactly(oneA, oneB))
   t.true(childrenWillUpdate.calledThrice)
-  t.true(childrenWillUpdate.getCall(0).calledWith(nodeA, nodeB))
-  t.true(childrenWillUpdate.getCall(1).calledWith(li3A, li3B))
-  t.true(childrenWillUpdate.getCall(2).calledWith(li1A, li1B))
+  t.true(childrenWillUpdate.getCall(0).calledWithExactly(nodeA, nodeB))
+  t.true(childrenWillUpdate.getCall(1).calledWithExactly(li3A, li3B))
+  t.true(childrenWillUpdate.getCall(2).calledWithExactly(li1A, li1B))
   t.true(childrenDidUpdate.calledThrice)
-  t.true(childrenDidUpdate.getCall(0).calledWith(li3A))
-  t.true(childrenDidUpdate.getCall(1).calledWith(li1A))
-  t.true(childrenDidUpdate.getCall(2).calledWith(nodeA))
+  t.true(childrenDidUpdate.getCall(0).calledWithExactly(li3A, li3B))
+  t.true(childrenDidUpdate.getCall(1).calledWithExactly(li1A, li1B))
+  t.true(childrenDidUpdate.getCall(2).calledWithExactly(nodeA, nodeB))
   t.is(nodeA.children[0], li0A)
   t.is(nodeA.children[1], li3A)
   t.is(nodeA.children[2], li1A)
@@ -306,17 +285,25 @@ test('hooks #3', t => {
   t.is(nodeA.outerHTML, '<ul><li id="li0">zeroth</li><li id="li3">third</li><li id="li1">first</li><li id="li4">fourth</li></ul>')
 })
 
-test('childrenOnly', t => {
-  const childA = a()
-  const childB = b()
-  const nodeA = div({ className : 'foo', children : [childA] })
-  const nodeB = div({ className : 'bar', children : [childB] })
-  const result = actualize(nodeA, nodeB, { childrenOnly : true })
+test('hooks + keys', t => {
+  let li1, li2, li3
+  const nodeA = ul([
+    li1 = li({ id : 'li1', children : 'one' }),
+    li2 = li({ id : 'li2', children : 'two' }),
+    li3 = li({ id : 'li3', children : 'three' }),
+  ])
+  const nodeB = ul([
+    li({ id : 'li3', children : 'third' }),
+    li({ id : 'li2', children : 'second' }),
+    li({ id : 'li1', children : 'first' }),
+  ])
+  const result = actualize(nodeA, nodeB)
   t.is(result, nodeA)
-  t.is(nodeA.className, 'foo')
-  t.is(nodeA.childElementCount, 1)
-  t.is(nodeA.children[0], childB)
-  t.is(nodeA.outerHTML, '<div class="foo"><b></b></div>')
+  t.is(nodeA.children[0], li3)
+  t.is(nodeA.children[1], li2)
+  t.is(nodeA.children[2], li1)
+  t.is(nodeA.childElementCount, 3)
+  t.is(nodeA.outerHTML, '<ul><li id="li3">third</li><li id="li2">second</li><li id="li1">first</li></ul>')
 })
 
 test('getKey', t => {
@@ -341,4 +328,17 @@ test('getKey', t => {
   t.is(li1.parentNode, null)
   t.is(li3.parentNode, null)
   t.is(nodeA.outerHTML, '<ul><li data-key="li0">zero</li><li data-key="li2">two</li><li data-key="li4">four</li></ul>')
+})
+
+test('childrenOnly', t => {
+  const childA = a()
+  const childB = b()
+  const nodeA = div({ className : 'foo', children : [childA] })
+  const nodeB = div({ className : 'bar', children : [childB] })
+  const result = actualize(nodeA, nodeB, { childrenOnly : true })
+  t.is(result, nodeA)
+  t.is(nodeA.className, 'foo')
+  t.is(nodeA.childElementCount, 1)
+  t.is(nodeA.children[0], childB)
+  t.is(nodeA.outerHTML, '<div class="foo"><b></b></div>')
 })
