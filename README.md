@@ -54,6 +54,22 @@ actualize(nodeA, nodeB)
 nodeA.outerHTML === '<button class="pressed">Close</button>' // true
 ```
 
+## DOM generation
+
+Actualize can be used in combination with [domb](https://npmjs.com/package/domb), 
+a convenient tool for generating DOM trees.
+The above example can be rewriten using `domb` as follows:
+
+```js
+import actualize from 'actualize'
+import { button } from 'domb'
+
+const nodeA = button({ children : 'Open '})
+const nodeB = button({ children : 'Close', className : 'pressed' })
+
+actualize(nodeA, nodeB)
+```
+
 ## Reordering lists
 
 It's common to work with lists of items in the DOM. 
@@ -78,8 +94,6 @@ The `actualize` function supports the following arguments:
 The return value will usually be `treeA`. 
 However, in situations where `treeA` is incompatible with `treeB` 
 (either a different node type or a different tag name) then `treeB` will be returned.
-
-This is used by `actualize` to rearrange elements instead of creating and destroying an element that already exists.
 
 Supported options (all optional):
 
