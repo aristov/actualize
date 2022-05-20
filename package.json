@@ -2,6 +2,7 @@
   "name": "actualize",
   "version": "0.1.0",
   "description": "DOM patching algorithm",
+  "main": "index.js",
   "files": [
     "lib"
   ],
