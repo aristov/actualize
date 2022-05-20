@@ -3,6 +3,7 @@
 [![NPM Version](https://img.shields.io/npm/v/actualize.svg)](https://www.npmjs.com/package/actualize)
 [![Node.js CI](https://github.com/aristov/actualize/actions/workflows/node.js.yml/badge.svg)](https://github.com/aristov/actualize/actions/workflows/node.js.yml)
 [![Coverage Status](https://coveralls.io/repos/github/aristov/actualize/badge.svg?branch=main)](https://coveralls.io/github/aristov/actualize?branch=main)
+[![NPM](https://img.shields.io/npm/l/domb)](https://raw.githubusercontent.com/aristov/actualize/main/LICENSE)
 
 Actualize is a very efficient and fast DOM patching algorithm. It's inspired by [morphdom](https://www.npmjs.com/package/morphdom) and [nanomorph](https://www.npmjs.com/package/nanomorph).
 It works with a real DOM, so a virtual DOM is not required.
