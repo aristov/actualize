@@ -1,6 +1,6 @@
 {
   "name": "actualize",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DOM patching algorithm",
   "main": "index.js",
   "files": [
