@@ -26,32 +26,35 @@ module.exports = __webpack_require__(1)
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 const setChildren = __webpack_require__(2)
-const updateNode = __webpack_require__(6)
+const updateNode = __webpack_require__(5)
 
 const getNodeId = node => node.id
 
 /**
- * @param {*|Element} nodeA
- * @param {*|Element} nodeB
- * @param {{}} [options]
- * @param {boolean} [options.childrenOnly]
- * @param {function} [options.nodeWillUpdate]
- * @param {function} [options.nodeDidUpdate]
- * @param {function} [options.childrenWillUpdate]
- * @param {function} [options.childrenDidUpdate]
- * @param {function} [options.nodeWillMount]
- * @param {function} [options.nodeDidMount]
- * @param {function} [options.nodeWillUnmount]
- * @param {function} [options.nodeDidUnmount]
+ * @param {*|Node} treeA node for updating
+ * @param {*|Node} treeB node to which `treeA` should be updated
+ * @param {{}} [options] actualize options
+ * @param {boolean} [options.childrenOnly] Update only the child nodes of the `treeA`, the element itself will be skipped. The default value is `false`.
+ * @param {function} [options.getKey] Called to get a custom key of the node in a child list.  The default value is `node.id`.
+ * @param {function} [options.nodeWillMount] Called before a node from the `B` tree is mounted to the `A` tree.
+ * @param {function} [options.nodeDidMount] Called after a node from the `B` tree has been mounted to the `A` tree.
+ * @param {function} [options.nodeWillUnmount] Called before a node in the `A` tree is unmounted.
+ * @param {function} [options.nodeDidUnmount] Called after a node in the `A` tree has been unmounted.
+ * @param {function} [options.nodeWillUpdate] Called before updating a node in the `A` tree.
+ * @param {function} [options.nodeDidUpdate] Called after updating a node in the `A` tree.
+ * @param {function} [options.childrenWillUpdate] Called before updating the child nodes of an element in the `A` tree.
+ * @param {function} [options.childrenDidUpdate] Called after updating the child nodes of an element in the `A` tree.
  * @return {Element}
  */
-function actualize(nodeA, nodeB, options = {}) {
-  options.getKey ??= getNodeId
-  if(options.childrenOnly) {
-    setChildren(nodeA, nodeB, options)
-    return nodeA
+function actualize(treeA, treeB, options = {}) {
+  if(!options.getKey) {
+    options.getKey = getNodeId
   }
-  return updateNode(nodeA, nodeB, options)
+  if(options.childrenOnly) {
+    setChildren(treeA, treeB, options)
+    return treeA
+  }
+  return updateNode(treeA, treeB, options)
 }
 
 module.exports = actualize
@@ -63,10 +66,9 @@ module.exports = actualize
 
 module.exports = setChildren // avoiding empty exports for circular dependency
 
-const deep = __webpack_require__(3)
-const getKeyIndex = __webpack_require__(4)
-const setChildNodes = __webpack_require__(5)
-const updateNode = __webpack_require__(6)
+const getKeyIndex = __webpack_require__(3)
+const setChildNodes = __webpack_require__(4)
+const updateNode = __webpack_require__(5)
 
 const { indexOf } = Array.prototype
 
@@ -97,7 +99,7 @@ function setChildren(nodeA, nodeB, options) {
     if(!indexB[getKey(childA)]) {
       nodeWillUnmount?.(childA)
       childA.remove()
-      deep(childA, nodeDidUnmount)
+      nodeDidUnmount?.(childA)
     }
     childA = nextA
   }
@@ -105,7 +107,6 @@ function setChildren(nodeA, nodeB, options) {
     childB = childrenB[i]
     childA = indexA[getKey(childB)]
     if(childA) {
-      updateNode(childA, childB, options)
       continue
     }
     nextA = nodeA.children[i]
@@ -114,7 +115,7 @@ function setChildren(nodeA, nodeB, options) {
       nextA.before(childB)
     }
     else nodeA.append(childB)
-    deep(childB, nodeDidMount)
+    nodeDidMount?.(childB)
   }
   for(i = 0; i < childrenB.length; i++) {
     childB = childrenB[i]
@@ -124,6 +125,7 @@ function setChildren(nodeA, nodeB, options) {
     }
     j = indexOf.call(nodeA.children, childA)
     if(i === j) {
+      updateNode(childA, childB, options)
       continue
     }
     nextA = nodeA.children[i].nextElementSibling
@@ -140,30 +142,6 @@ function setChildren(nodeA, nodeB, options) {
 
 /***/ }),
 /* 3 */
-/***/ ((module) => {
-
-/**
- * @param {*|Node} node
- * @param {function} [handler]
- */
-function deep(node, handler) {
-  if(!handler) {
-    return
-  }
-  handler(node)
-  if(!node.children) {
-    return
-  }
-  for(const child of node.children) {
-    deep(child, handler)
-  }
-}
-
-module.exports = deep
-
-
-/***/ }),
-/* 4 */
 /***/ ((module) => {
 
 const ELEMENT_NODE = 1
@@ -193,11 +171,10 @@ module.exports = getKeyIndex
 
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-const deep = __webpack_require__(3)
-const updateNode = __webpack_require__(6)
+const updateNode = __webpack_require__(5)
 
 /**
  * @param {*|Element} nodeA
@@ -221,13 +198,13 @@ function setChildNodes(nodeA, nodeB, options) {
     if(!childA) {
       nodeWillMount?.(childB)
       nodeA.append(childB)
-      deep(childB, nodeDidMount)
+      nodeDidMount?.(childB)
       continue
     }
     if(!childB) {
       nodeWillUnmount?.(childA)
       childA.remove()
-      deep(childA, nodeDidUnmount)
+      nodeDidUnmount?.(childA)
       continue
     }
     updateNode(childA, childB, options)
@@ -238,12 +215,11 @@ module.exports = setChildNodes
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-const setAttrs = __webpack_require__(7)
+const setAttrs = __webpack_require__(6)
 const setChildren = __webpack_require__(2)
-const deep = __webpack_require__(3)
 
 const ELEMENT_NODE = 1
 const TEXT_NODE = 3
@@ -270,7 +246,7 @@ function updateNode(nodeA, nodeB, options) {
     if(nodeA.data !== nodeB.data) {
       nodeWillUpdate?.(nodeA, nodeB)
       nodeA.data = nodeB.data
-      nodeDidUpdate?.(nodeA)
+      nodeDidUpdate?.(nodeA, nodeB)
     }
     return nodeA
   }
@@ -278,18 +254,18 @@ function updateNode(nodeA, nodeB, options) {
     if(nodeA.tagName === nodeB.tagName && getKey(nodeA) === getKey(nodeB)) {
       nodeWillUpdate?.(nodeA, nodeB)
       setAttrs(nodeA, nodeB)
-      nodeDidUpdate?.(nodeA)
+      nodeDidUpdate?.(nodeA, nodeB)
       childrenWillUpdate?.(nodeA, nodeB)
       setChildren(nodeA, nodeB, options)
-      childrenDidUpdate?.(nodeA)
+      childrenDidUpdate?.(nodeA, nodeB)
       return nodeA
     }
   }
   nodeWillUnmount?.(nodeA)
   nodeWillMount?.(nodeB)
   nodeA.replaceWith(nodeB)
-  deep(nodeA, nodeDidUnmount)
-  deep(nodeB, nodeDidMount)
+  nodeDidUnmount?.(nodeA)
+  nodeDidMount?.(nodeB)
   return nodeB
 }
 
@@ -297,7 +273,7 @@ module.exports = updateNode
 
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ ((module) => {
 
 /**
