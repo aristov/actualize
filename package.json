@@ -4,6 +4,7 @@
   "description": "DOM patching algorithm",
   "main": "index.js",
   "files": [
+    "dist",
     "lib"
   ],
   "scripts": {
