@@ -97,9 +97,10 @@ function setChildren(nodeA, nodeB, options) {
   while(childA) {
     nextA = childA.nextElementSibling
     if(!indexB[getKey(childA)]) {
-      nodeWillUnmount?.(childA)
-      childA.remove()
-      nodeDidUnmount?.(childA)
+      if(nodeWillUnmount?.(childA) !== false) {
+        childA.remove()
+        nodeDidUnmount?.(childA)
+      }
     }
     childA = nextA
   }
@@ -110,7 +111,9 @@ function setChildren(nodeA, nodeB, options) {
       continue
     }
     nextA = nodeA.children[i]
-    nodeWillMount?.(childB)
+    if(nodeWillMount?.(childB) === false) {
+      continue
+    }
     if(nextA) {
       nextA.before(childB)
     }
@@ -196,15 +199,17 @@ function setChildNodes(nodeA, nodeB, options) {
     childA = childNodesA[i]
     childB = childNodesB[i]
     if(!childA) {
-      nodeWillMount?.(childB)
-      nodeA.append(childB)
-      nodeDidMount?.(childB)
+      if(nodeWillMount?.(childB) !== false) {
+        nodeA.append(childB)
+        nodeDidMount?.(childB)
+      }
       continue
     }
     if(!childB) {
-      nodeWillUnmount?.(childA)
-      childA.remove()
-      nodeDidUnmount?.(childA)
+      if(nodeWillUnmount?.(childA) !== false) {
+        childA.remove()
+        nodeDidUnmount?.(childA)
+      }
       continue
     }
     updateNode(childA, childB, options)
@@ -244,25 +249,29 @@ function updateNode(nodeA, nodeB, options) {
   } = options
   if(nodeA.nodeType === TEXT_NODE && nodeB.nodeType === TEXT_NODE) {
     if(nodeA.data !== nodeB.data) {
-      nodeWillUpdate?.(nodeA, nodeB)
-      nodeA.data = nodeB.data
-      nodeDidUpdate?.(nodeA, nodeB)
+      if(nodeWillUpdate?.(nodeA, nodeB) !== false) {
+        nodeA.data = nodeB.data
+        nodeDidUpdate?.(nodeA, nodeB)
+      }
     }
     return nodeA
   }
   if(nodeA.nodeType === ELEMENT_NODE && nodeB.nodeType === ELEMENT_NODE) {
     if(nodeA.tagName === nodeB.tagName && getKey(nodeA) === getKey(nodeB)) {
-      nodeWillUpdate?.(nodeA, nodeB)
-      setAttrs(nodeA, nodeB)
-      nodeDidUpdate?.(nodeA, nodeB)
-      childrenWillUpdate?.(nodeA, nodeB)
-      setChildren(nodeA, nodeB, options)
-      childrenDidUpdate?.(nodeA, nodeB)
+      if(nodeWillUpdate?.(nodeA, nodeB) !== false) {
+        setAttrs(nodeA, nodeB)
+        nodeDidUpdate?.(nodeA, nodeB)
+      }
+      if(childrenWillUpdate?.(nodeA, nodeB) !== false) {
+        setChildren(nodeA, nodeB, options)
+        childrenDidUpdate?.(nodeA, nodeB)
+      }
       return nodeA
     }
   }
-  nodeWillUnmount?.(nodeA)
-  nodeWillMount?.(nodeB)
+  if(nodeWillUnmount?.(nodeA) === false || nodeWillMount?.(nodeB) === false) {
+    return nodeA
+  }
   nodeA.replaceWith(nodeB)
   nodeDidUnmount?.(nodeA)
   nodeDidMount?.(nodeB)
