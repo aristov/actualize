@@ -342,3 +342,123 @@ test('childrenOnly', t => {
   t.is(nodeA.children[0], childB)
   t.is(nodeA.outerHTML, '<div class="foo"><b></b></div>')
 })
+
+test('nodeWillUpdate: false (Element)', t => {
+  const nodeA = div({ className : 'foo', children : 'bat' })
+  const nodeB = div({ className : 'bar', children : 'baz' })
+  const result = actualize(nodeA, nodeB, {
+    nodeWillUpdate : node => node.nodeType !== 1,
+  })
+  t.is(result, nodeA)
+  t.is(result.outerHTML, '<div class="foo">baz</div>')
+})
+
+test('nodeWillUpdate: false (Text)', t => {
+  const nodeA = div({ className : 'foo', children : 'bat' })
+  const nodeB = div({ className : 'bar', children : 'baz' })
+  const result = actualize(nodeA, nodeB, {
+    nodeWillUpdate : node => node.nodeType !== 3,
+  })
+  t.is(result, nodeA)
+  t.is(result.outerHTML, '<div class="bar">bat</div>')
+})
+
+test('childrenWillUpdate: false', t => {
+  const nodeA = div({ className : 'foo', children : 'bat' })
+  const nodeB = div({ className : 'bar', children : 'baz' })
+  const result = actualize(nodeA, nodeB, {
+    childrenWillUpdate : () => false,
+  })
+  t.is(result, nodeA)
+  t.is(result.outerHTML, '<div class="bar">bat</div>')
+})
+
+test('nodeWillMount: false #1', t => {
+  const nodeA = a('foo')
+  const nodeB = b('bar')
+  const container = div(nodeA)
+  const result = actualize(nodeA, nodeB, {
+    nodeWillMount : () => false,
+  })
+  t.is(result, nodeA)
+  t.is(container.outerHTML, '<div><a>foo</a></div>')
+})
+
+test('nodeWillMount: false #2', t => {
+  const nodeA = div()
+  const nodeB = div(div('foo'))
+  const result = actualize(nodeA, nodeB, {
+    nodeWillMount : () => false,
+  })
+  t.is(result, nodeA)
+  t.is(result.outerHTML, '<div></div>')
+})
+
+test('nodeWillUnmount: false #1', t => {
+  const nodeA = a('foo')
+  const nodeB = b('bar')
+  const container = div(nodeA)
+  const result = actualize(nodeA, nodeB, {
+    nodeWillUnmount : () => false,
+  })
+  t.is(result, nodeA)
+  t.is(container.outerHTML, '<div><a>foo</a></div>')
+})
+
+test('nodeWillUnmount: false #2', t => {
+  const nodeA = div(div('foo'))
+  const nodeB = div()
+  const result = actualize(nodeA, nodeB, {
+    nodeWillUnmount : () => false,
+  })
+  t.is(result, nodeA)
+  t.is(result.outerHTML, '<div><div>foo</div></div>')
+})
+
+test('nodeWillMount: false (keys)', t => {
+  let li1, li2, li3, li4
+  const nodeA = ul([
+    li1 = li({ id : 'li1', children : 'one' }),
+    li2 = li({ id : 'li2', children : 'two' }),
+    li3 = li({ id : 'li3', children : 'three' }),
+  ])
+  const nodeB = ul([
+    li({ id : 'li2', children : 'second' }),
+    li({ id : 'li3', children : 'third' }),
+    li4 = li({ id : 'li4', children : 'fourth' }),
+  ])
+  const result = actualize(nodeA, nodeB, {
+    nodeWillMount : () => false
+  })
+  t.is(result, nodeA)
+  t.is(nodeA.childElementCount, 2)
+  t.is(nodeA.children[0], li2)
+  t.is(nodeA.children[1], li3)
+  t.is(li1.parentNode, null)
+  t.is(li4.parentNode, nodeB)
+  t.is(nodeA.outerHTML, '<ul><li id="li2">second</li><li id="li3">third</li></ul>')
+})
+
+test('nodeWillUnmount: false (keys)', t => {
+  let li1, li2, li3, li4
+  const nodeA = ul([
+    li1 = li({ id : 'li1', children : 'one' }),
+    li2 = li({ id : 'li2', children : 'two' }),
+    li3 = li({ id : 'li3', children : 'three' }),
+  ])
+  const nodeB = ul([
+    li({ id : 'li2', children : 'second' }),
+    li({ id : 'li3', children : 'third' }),
+    li4 = li({ id : 'li4', children : 'fourth' }),
+  ])
+  const result = actualize(nodeA, nodeB, {
+    nodeWillUnmount : () => false
+  })
+  t.is(result, nodeA)
+  t.is(nodeA.childElementCount, 4)
+  t.is(nodeA.children[0], li1)
+  t.is(nodeA.children[1], li2)
+  t.is(nodeA.children[2], li3)
+  t.is(nodeA.children[3], li4)
+  t.is(nodeA.outerHTML, '<ul><li id="li1">one</li><li id="li2">second</li><li id="li3">third</li><li id="li4">fourth</li></ul>')
+})
